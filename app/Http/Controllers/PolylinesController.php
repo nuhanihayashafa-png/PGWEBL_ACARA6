@@ -3,11 +3,10 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Models\polylinesModel; // Pastikan huruf besar/kecilnya sesuai dengan file aslinya
+use App\Models\polylinesModel;
 
 class PolylinesController extends Controller
 {
-    // 1. Deklarasikan variabel agar tidak error di Intelephense
     protected $polylines;
 
     public function __construct()
@@ -15,69 +14,38 @@ class PolylinesController extends Controller
         $this->polylines = new polylinesModel();
     }
 
-    public function index()
-    {
-        //
-    }
-
-    public function create()
-    {
-        //
-    }
-
     public function store(Request $request)
     {
-        // 2. Tambahkan validasi input
-        $request->validate(
-            [
-                'geometry_polyline' => 'required', // Pastikan "name" di input form HTML-mu adalah "geometry_polyline"
-                'name' => 'required|string|max:255',
-                'description' => 'nullable|string',
-            ],
-            [
-                'geometry_polyline.required' => 'Field geometry polyline harus diisi.',
-                'name.required' => 'Field name harus diisi.',
-                'name.string' => 'Field name harus berupa string.',
-                'name.max' => 'Field name tidak boleh lebih dari 255 karakter.',
-                'description.string' => 'Field description harus berupa string.',
-            ]
-        );
+        $request->validate([
+            'geometry_polyline' => 'required',
+            'name'              => 'required|string|max:255',
+            'description'       => 'nullable|string',
+            'image'             => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+        ]);
 
-        // 3. Siapkan data yang akan disimpan
-        $data = [
-            'name' => $request->name,
-            'description' => $request->description,
-            'geom' => $request->geometry_polyline,
-            'image' => '', // Tambahkan baris ini untuk menghindari error Not Null
-        ];
-
-        // 4. Simpan data ke database & Redirect Back
-        if (!$this->polylines->create($data)) {
-            // Jika gagal:
-            return redirect()->back()->with('error', 'Gagal menyimpan data polylines.');
+        if (!is_dir('storage/images')) {
+            mkdir('./storage/images', 0777, true);
         }
 
-        // Jika sukses: Kembali ke halaman sebelumnya (peta)
-        return redirect()->back()->with('success', 'Data polylines berhasil disimpan.');
-    }
+        if ($request->hasFile('image')) {
+            $image      = $request->file('image');
+            $name_image = time() . '_polyline.' . strtolower($image->getClientOriginalExtension());
+            $image->move('storage/images', $name_image);
+        } else {
+            $name_image = null;
+        }
 
-    public function show(string $id)
-    {
-        //
-    }
+        $data = [
+            'name'        => $request->name,
+            'description' => $request->description,
+            'geom'        => $request->geometry_polyline,
+            'image'       => $name_image,
+        ];
 
-    public function edit(string $id)
-    {
-        //
-    }
+        if ($this->polylines->create($data)) {
+            return redirect()->route('map')->with('success', 'Data garis berhasil disimpan.');
+        }
 
-    public function update(Request $request, string $id)
-    {
-        //
-    }
-
-    public function destroy(string $id)
-    {
-        //
+        return redirect()->route('map')->with('error', 'Gagal menyimpan data garis.');
     }
 }

@@ -2,38 +2,44 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\pointsmodel; // Pastikan huruf besar/kecilnya sama persis dengan nama file Model-mu
+use App\Models\pointsModel;
 use Illuminate\Http\Request;
 
 class PointsController extends Controller
 {
-    // 1. Deklarasikan variabel global di sini (Solusi agar tidak perlu mematikan alert Intelephense)
-    protected $points;
-
     public function __construct()
     {
-        // 2. Tambahkan titik koma (;) di akhir
-        $this->points = new pointsmodel();
+        $this->points = new pointsModel();
     }
-
+    /**
+     * Display a listing of the resource.
+     */
     public function index()
     {
         //
     }
 
+    /**
+     * Show the form for creating a new resource.
+     */
     public function create()
     {
         //
     }
 
+    /**
+     * Store a newly created resource in storage.
+     */
     public function store(Request $request)
     {
-        // 1. Validasi input (Harus diletakkan di paling atas)
-        $request->validate(
+
+    //Validasi input
+    $request->validate(
             [
                 'geometry_point' => 'required',
                 'name' => 'required|string|max:255',
-                'description' => 'nullable|string',
+                'description' => 'required|string',
+                'image' => 'nullable|image|mimes:jpeg,png,jng|max:2028',
             ],
             [
                 'geometry_point.required' => 'Field geometry point harus diisi.',
@@ -41,42 +47,71 @@ class PointsController extends Controller
                 'name.string' => 'Field name harus berupa string.',
                 'name.max' => 'Field name tidak boleh lebih dari 255 karakter.',
                 'description.string' => 'Field description harus berupa string.',
+                'image.image' => 'Field  harus berupa gambar.',
+                'image.mimes' => 'Field gambar harus berformat jpeg, png, jpg.',
+                'image.max' => 'Ukuran field gambar tidak boleh lebih dari 2MB.',
             ]
         );
 
-        // 2. Siapkan data yang akan disimpan
+        #Create directory for images if it doesn't exist
+        if (!is_dir('storage/images')) {
+            mkdir('./storage/images', 0777);
+            }
+
+        #Get the uploaded image
+        if ($request->hasFile('image')) {
+            $image = $request->file('image');
+            $name_image = time() . "_point." . strtolower($image->getClientOriginalExtension());
+            $image->move('storage/images', $name_image);
+            } else {
+                $name_image = null;
+                }
+
         $data = [
+            'geom' => $request->geometry_point,
             'name' => $request->name,
             'description' => $request->description,
-            'geom' => $request->geometry_point,
+            'image' => $name_image,
         ];
 
-        // 3. Simpan data ke database (Cukup 1 kali saja)
-        // Jika gagal:
-        // Jika gagal:
-        if (!$this->points->create($data)) {
-            return redirect()->back()->with('error', 'Gagal menyimpan data point.');
-        }
 
-        // Jika sukses: Kembali ke halaman peta
-        return redirect()->back()->with('success', 'Data point berhasil disimpan.');
+
+        // simpan data ke database
+        if ($this->points->create($data)) {
+    return redirect()->route('map')->with('success', 'Data point berhasil disimpan.');
+}
+
+        //Kembali ke halaman peta
+        return redirect()->route('map')->with('error', 'Gagal menyimpan data point.');
     }
 
+    /**
+     * Display the specified resource.
+     */
     public function show(string $id)
     {
         //
     }
 
+    /**
+     * Show the form for editing the specified resource.
+     */
     public function edit(string $id)
     {
         //
     }
 
+    /**
+     * Update the specified resource in storage.
+     */
     public function update(Request $request, string $id)
     {
         //
     }
 
+    /**
+     * Remove the specified resource from storage.
+     */
     public function destroy(string $id)
     {
         //

@@ -1,22 +1,22 @@
-<nav class="navbar navbar-expand-lg bg-body-tertiary">
-        <div class="container-fluid">
-            <a class="navbar-brand" href="#">{{$title}}  </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
-                aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav">
-                    <li class="nav-item">
-                        <a class="nav-link active" aria-current="page" href="{{ route('home') }}">Beranda</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ route('map') }}">Peta</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ route('table') }}">Tabel</a>
-                    </li>
-                </ul>
-            </div>
-        </div>
-    </nav>
+<nav class="cowboy-nav">
+    <a class="brand" href="{{ route('home') }}">
+        <i class="fas fa-compass"></i>
+        {{ $title ?? 'GeoSpasial Web' }}
+    </a>
+
+    <button class="nav-toggler" onclick="this.nextElementSibling.classList.toggle('open')">
+        <i class="fas fa-bars"></i>
+    </button>
+
+    <div class="nav-links">
+        <a href="{{ route('home') }}" class="{{ request()->routeIs('home') ? 'active' : '' }}">
+            <i class="fas fa-home"></i> Beranda
+        </a>
+        <a href="{{ route('map') }}" class="{{ request()->routeIs('map') ? 'active' : '' }}">
+            <i class="fas fa-map"></i> Peta
+        </a>
+        <a href="{{ route('table') }}" class="{{ request()->routeIs('table') ? 'active' : '' }}">
+            <i class="fas fa-table"></i> Tabel
+        </a>
+    </div>
+</nav>

@@ -3,62 +3,46 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Models\Point;
 use Illuminate\Support\Facades\DB;
+use App\Models\pointsModel;
+use App\Models\polylinesModel;
+use App\Models\polygonsModel;
 
 class MapController extends Controller
 {
-    // 1. Fungsi untuk menampilkan halaman (view) Peta
     public function map()
     {
-        $data = [
-            'title' => 'Peta Yogyakarta',
-        ];
-
-        // Karena kita akan me-load data lewat GeoJSON di JavaScript,
-        // kamu tidak wajib melempar data query $points ke view map.
-        return view('map', $data);
+        return view('map', ['title' => 'Peta Interaktif']);
     }
 
-    // 2. Fungsi untuk menampilkan halaman (view) Tabel
     public function table()
     {
-        $data = [
-            'title' => 'Tabel Data Lokasi',
-        ];
-
-        // Untuk halaman tabel, tidak perlu ST_X dan ST_Y jika ada data Polygon.
-        // Cukup ambil kolom standar saja agar tidak error.
-        $points = Point::select('id', 'name', 'description', 'image')->get();
-
-        return view('table', $data, compact('points'));
+        $points = pointsModel::select('id', 'name', 'description', 'image')->get();
+        return view('table', ['title' => 'Tabel Data Lokasi', 'points' => $points]);
     }
 
-    // 3. TAMBAHKAN INI: Fungsi khusus API untuk dipanggil oleh Leaflet JavaScript
     public function getMapData()
     {
-        // Menggunakan ST_AsGeoJSON agar Polyline & Polygon ikut terbaca
-        $points = Point::select(
-            'id', 'name', 'description', 'image',
-            DB::raw('ST_AsGeoJSON(geom::geometry) as geojson')
-        )->get();
+        $points   = pointsModel::select('id', 'name', 'description', 'image',
+                        DB::raw('ST_AsGeoJSON(geom::geometry) as geojson'))->get();
+        $lines    = polylinesModel::select('id', 'name', 'description', 'image',
+                        DB::raw('ST_AsGeoJSON(geom::geometry) as geojson'))->get();
+        $polygons = polygonsModel::select('id', 'name', 'description', 'image',
+                        DB::raw('ST_AsGeoJSON(geom::geometry) as geojson'))->get();
 
-        $features = $points->map(function($item) {
+        $features = $points->concat($lines)->concat($polygons)->map(function ($item) {
             return [
-                'type' => 'Feature',
-                'geometry' => json_decode($item->geojson),
+                'type'       => 'Feature',
+                'geometry'   => json_decode($item->geojson),
                 'properties' => [
-                    'id' => $item->id,
-                    'name' => $item->name,
+                    'id'          => $item->id,
+                    'name'        => $item->name,
                     'description' => $item->description,
-                    'image' => $item->image,
-                ]
+                    'image'       => $item->image,
+                ],
             ];
         });
 
-        return response()->json([
-            'type' => 'FeatureCollection',
-            'features' => $features
-        ]);
+        return response()->json(['type' => 'FeatureCollection', 'features' => $features]);
     }
 }

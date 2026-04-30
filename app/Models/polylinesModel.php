@@ -16,26 +16,28 @@ class polylinesModel extends Model
             'id',
             'name',
             'description',
+            'image',                                        // ← ditambahkan
             DB::raw('ST_AsGeoJSON(geom) as geojson')
         )->get();
 
-        // 2. Bentuk format Feature standar
         $features = $polylines->map(function ($polyline) {
             return [
-                'type' => 'Feature',
+                'type'     => 'Feature',
                 'geometry' => json_decode($polyline->geojson),
                 'properties' => [
                     'id'          => $polyline->id,
                     'name'        => $polyline->name,
                     'description' => $polyline->description,
+                    'image'       => $polyline->image,      // ← ditambahkan
                 ]
             ];
         });
 
-        // 3. Kembalikan sebagai FeatureCollection
         return [
             'type'     => 'FeatureCollection',
             'features' => $features
         ];
     }
+    protected $fillable = ['name', 'description', 'geom', 'image'];
+
 }

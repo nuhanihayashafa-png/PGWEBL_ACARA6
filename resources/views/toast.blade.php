@@ -1,6 +1,6 @@
 {{-- Success Toast --}}
 @if (session()->has('success'))
-  <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 1000; margin-bottom: 20px;">
+  <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 99999; margin-bottom: 20px;">
     <div id="liveToastSuccess" class="toast align-items-center text-bg-success border-0" role="alert"
       aria-live="assertive" aria-atomic="true">
       <div class="d-flex">
@@ -22,7 +22,7 @@
 
 {{-- Error Toast --}}
 @if (session()->has('error'))
-  <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 1000; margin-bottom: 20px;">
+  <<div class="position-fixed bottom-0 end-0 p-3" style="z-index: 99999; margin-bottom: 20px;">
     <div id="liveToastError" class="toast align-items-center text-bg-danger border-0" role="alert"
       aria-live="assertive" aria-atomic="true">
       <div class="d-flex">
@@ -44,7 +44,7 @@
 
 {{-- Warning Toast --}}
 @if (session()->has('warning'))
-  <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 1000; margin-bottom: 20px;">
+  <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 99999; margin-bottom: 20px;">
     <div id="liveToastWarning" class="toast align-items-center text-bg-warning border-0" role="alert"
       aria-live="assertive" aria-atomic="true">
       <div class="d-flex">
@@ -66,7 +66,7 @@
 
 {{-- Validation Errors Toast --}}
 @if ($errors->any())
-  <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 1000; margin-bottom: 20px;">
+  <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 99999; margin-bottom: 20px;">
     <div id="liveToastErrorValidationName" class="toast align-items-center text-bg-danger border-0" role="alert"
       aria-live="assertive" aria-atomic="true">
       <div class="d-flex">
