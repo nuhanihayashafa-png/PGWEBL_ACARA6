@@ -48,4 +48,20 @@ class PolygonsController extends Controller
 
         return redirect()->route('map')->with('error', 'Gagal menyimpan data area.');
     }
+
+    public function destroy(string $id)
+    {
+        $item = $this->polygons->find($id);
+
+        if ($item && $item->image) {
+            $path = public_path('storage/images/' . $item->image);
+            if (file_exists($path)) unlink($path);
+        }
+
+        if ($this->polygons->destroy($id)) {
+            return redirect()->route('map')->with('success', 'Data area berhasil dihapus.');
+        }
+
+        return redirect()->route('map')->with('error', 'Gagal menghapus data area.');
+    }
 }

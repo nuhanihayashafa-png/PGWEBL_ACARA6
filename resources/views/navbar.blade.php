@@ -18,5 +18,8 @@
         <a href="{{ route('table') }}" class="{{ request()->routeIs('table') ? 'active' : '' }}">
             <i class="fas fa-table"></i> Tabel
         </a>
+        <a href="{{ route('about') }}" class="{{ request()->routeIs('about') ? 'active' : '' }}">
+        <i class="fas fa-circle-info"></i> Tentang
+    </a>
     </div>
 </nav>

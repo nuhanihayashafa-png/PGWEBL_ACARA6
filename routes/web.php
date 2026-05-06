@@ -1,43 +1,47 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\PageController;
-use App\Http\Controllers\MapController;
-use App\Http\Controllers\PolylinesController;
-use App\Http\Controllers\PolygonsController;
 use App\Http\Controllers\PointsController;
+use App\Http\Controllers\PolygonsController;
+use App\Http\Controllers\PolylinesController;
+use App\Http\Controllers\MapController;
+use Illuminate\Support\Facades\Route;
 
-// 1. Route untuk halaman utama (Home)
 Route::get('/', function () {
     return view('welcome');
 })->name('home');
 
-// 2. Route untuk halaman Peta
+// Halaman peta - pakai MapController
 Route::get('/map', [MapController::class, 'map'])->name('map');
 
-// ==========================================
-// RUTE API UNTUK MEMUAT DATA KE PETA LEAFLET
-// ==========================================
+// API data untuk Leaflet
 Route::get('/api/map-data', [MapController::class, 'getMapData'])->name('api.map.data');
 
+// GeoJSON routes (untuk map.blade.php lama yang pakai $.getJSON)
+Route::get('/geojson/points',   [MapController::class, 'geojsonPoints'])->name('geojson.points');
+Route::get('/geojson/polylines',[MapController::class, 'geojsonPolylines'])->name('geojson.polylines');
+Route::get('/geojson/polygons', [MapController::class, 'geojsonPolygons'])->name('geojson.polygons');
 
-// ==========================================
-// RUTE UNTUK MENYIMPAN DATA DARI FORM (POST)
-// ==========================================
-// Point - Rute untuk menyimpan data titik
-Route::post('/store-points', [PointsController::class, 'store'])->name('store');
+// Points
+Route::post('/store-points',         [PointsController::class, 'store'])->name('points.store');
+Route::delete('/delete-points/{id}', [PointsController::class, 'destroy'])->name('points.delete');
 
-// Polylines - Rute untuk menyimpan data garis
-Route::post('/store-polylines', [PolylinesController::class, 'store'])->name('polylines.store');
+// Polylines
+Route::post('/store-polylines',         [PolylinesController::class, 'store'])->name('polylines.store');
+Route::delete('/delete-polylines/{id}', [PolylinesController::class, 'destroy'])->name('polylines.delete');
 
-// Polygons - Rute untuk menyimpan data area/poligon
-Route::post('/store-polygons', [PolygonsController::class, 'store'])->name('polygons.store');
+// Polygons
+Route::post('/store-polygons',         [PolygonsController::class, 'store'])->name('polygons.store');
+Route::delete('/delete-polygons/{id}', [PolygonsController::class, 'destroy'])->name('polygons.delete');
 
-
-// 3. Route untuk halaman Tabel
+// Tabel
 Route::get('/table', [MapController::class, 'table'])->name('table');
 
-// Route bawaan jika kamu pakai Laravel Breeze/Jetstream
+Route::get('/about', function () {
+    return view('about', ['title' => 'Tentang']);
+})->name('about');
+
 Route::view('dashboard', 'dashboard')
     ->middleware(['auth', 'verified'])
     ->name('dashboard');
+

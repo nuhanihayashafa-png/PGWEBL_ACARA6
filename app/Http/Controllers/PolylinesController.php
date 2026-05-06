@@ -48,4 +48,20 @@ class PolylinesController extends Controller
 
         return redirect()->route('map')->with('error', 'Gagal menyimpan data garis.');
     }
+
+    public function destroy(string $id)
+    {
+        $item = $this->polylines->find($id);
+
+        if ($item && $item->image) {
+            $path = public_path('storage/images/' . $item->image);
+            if (file_exists($path)) unlink($path);
+        }
+
+        if ($this->polylines->destroy($id)) {
+            return redirect()->route('map')->with('success', 'Data garis berhasil dihapus.');
+        }
+
+        return redirect()->route('map')->with('error', 'Gagal menghapus data garis.');
+    }
 }

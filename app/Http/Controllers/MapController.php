@@ -45,4 +45,69 @@ class MapController extends Controller
 
         return response()->json(['type' => 'FeatureCollection', 'features' => $features]);
     }
+
+    // ── GeoJSON untuk map.blade.php ($.getJSON) ──
+
+    public function geojsonPoints()
+    {
+        $items = pointsModel::select('id', 'name', 'description', 'image', 'created_at',
+                    DB::raw('ST_AsGeoJSON(geom::geometry) as geojson'))->get();
+
+        return response()->json([
+            'type'     => 'FeatureCollection',
+            'features' => $items->map(fn($i) => [
+                'type'       => 'Feature',
+                'geometry'   => json_decode($i->geojson),
+                'properties' => [
+                    'id'          => $i->id,
+                    'name'        => $i->name,
+                    'description' => $i->description,
+                    'image'       => $i->image,
+                    'created_at'  => $i->created_at,
+                ],
+            ]),
+        ]);
+    }
+
+    public function geojsonPolylines()
+    {
+        $items = polylinesModel::select('id', 'name', 'description', 'image', 'created_at',
+                    DB::raw('ST_AsGeoJSON(geom::geometry) as geojson'))->get();
+
+        return response()->json([
+            'type'     => 'FeatureCollection',
+            'features' => $items->map(fn($i) => [
+                'type'       => 'Feature',
+                'geometry'   => json_decode($i->geojson),
+                'properties' => [
+                    'id'          => $i->id,
+                    'name'        => $i->name,
+                    'description' => $i->description,
+                    'image'       => $i->image,
+                    'created_at'  => $i->created_at,
+                ],
+            ]),
+        ]);
+    }
+
+    public function geojsonPolygons()
+    {
+        $items = polygonsModel::select('id', 'name', 'description', 'image', 'created_at',
+                    DB::raw('ST_AsGeoJSON(geom::geometry) as geojson'))->get();
+
+        return response()->json([
+            'type'     => 'FeatureCollection',
+            'features' => $items->map(fn($i) => [
+                'type'       => 'Feature',
+                'geometry'   => json_decode($i->geojson),
+                'properties' => [
+                    'id'          => $i->id,
+                    'name'        => $i->name,
+                    'description' => $i->description,
+                    'image'       => $i->image,
+                    'created_at'  => $i->created_at,
+                ],
+            ]),
+        ]);
+    }
 }
