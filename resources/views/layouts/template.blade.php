@@ -185,6 +185,7 @@
     </style>
 
     @yield('styles')
+    @stack('styles')
 </head>
 
 <body>
@@ -203,7 +204,7 @@
     {{-- Bootstrap JS --}}
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
-    {{-- Leaflet JS --}}
+    {{-- Leaflet JS - dimuat sekali di sini, tidak perlu dimuat ulang di child view --}}
     <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 
     {{-- Hamburger toggle --}}
@@ -217,7 +218,9 @@
         });
     </script>
 
+    @stack('scripts')
     @yield('script')
+
 </body>
 
 </html>

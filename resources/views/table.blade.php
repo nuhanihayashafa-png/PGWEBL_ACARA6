@@ -1,118 +1,428 @@
 @extends('layouts.template')
 
 @section('styles')
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
-<style>
-    body {
-        background-color: #f4f7f6; /* Warna background lebih lembut */
-        font-family: 'Inter', sans-serif;
-    }
-    .container {
-        margin-top: 50px;
-    }
-    .card {
-        border: none;
-        border-radius: 15px; /* Corner lebih membulat */
-    }
-    .card-header {
-        background: linear-gradient(45deg, #4e73df, #224abe); /* Gradient halus */
-        color: white;
-        border-radius: 15px 15px 0 0 !important;
-        padding: 20px;
-    }
-    .table {
-        border-collapse: separate;
-        border-spacing: 0 10px; /* Jarak antar baris */
-    }
-    .table thead th {
-        border: none;
-        color: #abb5be;
-        text-transform: uppercase;
-        font-size: 12px;
-        letter-spacing: 1px;
-        background-color: transparent !important;
-        padding-bottom: 20px;
-    }
-    .table tbody tr {
-        background-color: white;
-        box-shadow: 0 5px 10px rgba(0,0,0,0.05); /* Shadow halus tiap baris */
-        transition: transform 0.2s;
-    }
-    .table tbody tr:hover {
-        transform: scale(1.01); /* Efek melayang saat hover */
-        background-color: #f8f9fc;
-    }
-    .table td {
-        vertical-align: middle;
-        border: none;
-        padding: 15px;
-    }
-    .table td:first-child { border-radius: 10px 0 0 10px; }
-    .table td:last-child { border-radius: 0 10px 10px 0; }
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/2.3.8/css/dataTables.dataTables.css">
 
-    .img-thumbnail {
-        border-radius: 10px;
-        border: none;
-        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-        transition: 0.3s;
-    }
-    .img-thumbnail:hover {
-        transform: scale(1.1);
-    }
-    .badge-lat { background-color: #e2e8f0; color: #475569; }
-    .badge-long { background-color: #dcfce7; color: #166534; }
-</style>
+    <style>
+        .page-table {
+            padding: 2rem 1.5rem;
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        .table-card {
+            background: #FDF6E3;
+            border: 1px solid #D2B48C;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 16px rgba(92, 51, 23, 0.08);
+            margin-bottom: 2rem;
+        }
+
+        .table-card-header {
+            background: linear-gradient(135deg, #5C3317, #8B4513);
+            color: #FDF6E3;
+            padding: 1rem 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .table-card-header h4 {
+            font-family: 'Playfair Display', serif;
+            font-size: 1rem;
+            margin: 0;
+        }
+
+        .table-badge {
+            font-size: .72rem;
+            background: rgba(255, 255, 255, 0.15);
+            color: #FDF6E3;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 20px;
+            padding: 3px 10px;
+        }
+
+        /* Override tampilan DataTables agar sesuai tema */
+        div.dt-container {
+            padding: 0.75rem 1rem;
+        }
+
+        div.dt-container .dt-search input,
+        div.dt-container .dt-length select {
+            border: 1px solid #D2B48C;
+            border-radius: 6px;
+            padding: 4px 8px;
+            font-size: .82rem;
+            color: #5C3317;
+            background: #FDF6E3;
+            outline: none;
+        }
+
+        div.dt-container .dt-search input:focus,
+        div.dt-container .dt-length select:focus {
+            border-color: #8B4513;
+            box-shadow: 0 0 0 2px rgba(139, 69, 19, 0.15);
+        }
+
+        div.dt-container .dt-info,
+        div.dt-container .dt-length label,
+        div.dt-container .dt-search label {
+            font-size: .80rem;
+            color: #6B5C4E;
+        }
+
+        div.dt-container .dt-paging .dt-paging-button {
+            border: 1px solid #D2B48C !important;
+            border-radius: 6px !important;
+            color: #5C3317 !important;
+            background: #FDF6E3 !important;
+            padding: 3px 9px !important;
+            font-size: .80rem;
+        }
+
+        div.dt-container .dt-paging .dt-paging-button.current {
+            background: #8B4513 !important;
+            color: #FDF6E3 !important;
+            border-color: #8B4513 !important;
+        }
+
+        div.dt-container .dt-paging .dt-paging-button:hover:not(.disabled) {
+            background: #E8D5B0 !important;
+            color: #5C3317 !important;
+        }
+
+        /* Garis tabel */
+        .tbl {
+            width: 100% !important;
+            border-collapse: collapse;
+        }
+
+        .tbl thead th {
+            background: #E8D5B0;
+            color: #5C3317;
+            font-size: .75rem;
+            text-transform: uppercase;
+            letter-spacing: .05em;
+            padding: 10px 14px;
+            border-bottom: 2px solid #D2B48C;
+            border-right: 1px solid #D2B48C;
+            font-weight: 600;
+        }
+
+        .tbl thead th:last-child {
+            border-right: none;
+        }
+
+        .tbl tbody tr {
+            border-bottom: 1px solid #EDE0C8;
+            transition: background .15s;
+        }
+
+        .tbl tbody tr:last-child {
+            border-bottom: none;
+        }
+
+        .tbl tbody tr:hover {
+            background: #FFF9F0;
+        }
+
+        .tbl td {
+            padding: 12px 14px;
+            font-size: .84rem;
+            color: #5C3317;
+            vertical-align: middle;
+            border-right: 1px solid #EDE0C8;
+        }
+
+        .tbl td:last-child {
+            border-right: none;
+        }
+
+        .tbl td.no {
+            color: #A0916A;
+            font-size: .78rem;
+            width: 40px;
+            text-align: center;
+        }
+
+        .loc-name {
+            font-weight: 600;
+            color: #5C3317;
+        }
+
+        .loc-desc {
+            font-size: .78rem;
+            color: #6B5C4E;
+            margin-top: 2px;
+        }
+
+        .coord-badge {
+            display: inline-block;
+            font-size: .72rem;
+            border-radius: 4px;
+            padding: 2px 7px;
+            margin-bottom: 3px;
+        }
+
+        .coord-lat {
+            background: #E8D5B0;
+            color: #5C3317;
+        }
+
+        .coord-long {
+            background: #D4EDDA;
+            color: #2E7D32;
+        }
+
+        .loc-img {
+            width: 60px;
+            height: 60px;
+            object-fit: cover;
+            border-radius: 8px;
+            border: 1px solid #D2B48C;
+        }
+
+        .no-img {
+            width: 60px;
+            height: 60px;
+            border-radius: 8px;
+            background: #E8D5B0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #A0916A;
+            font-size: 1.2rem;
+        }
+
+        .titik-badge {
+            display: inline-block;
+            font-size: .72rem;
+            border-radius: 4px;
+            padding: 2px 8px;
+            background: #E8D5B0;
+            color: #5C3317;
+        }
+
+        .color-swatch {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: .78rem;
+            color: #5C3317;
+        }
+
+        .swatch-box {
+            width: 20px;
+            height: 14px;
+            border-radius: 3px;
+            border: 1px solid #D2B48C;
+            display: inline-block;
+        }
+
+        .empty-row td {
+            text-align: center;
+            padding: 2rem;
+            color: #A0916A;
+            font-size: .85rem;
+        }
+    </style>
 @endsection
 
 @section('content')
-<div class="container">
-    <div class="card shadow-sm">
-        <div class="card-header d-flex align-items-center justify-content-between">
-            <h4 class="mb-0"><i class="fas fa-map-marked-alt me-2"></i> Inventarisasi Titik Lokasi</h4>
-            <span class="badge bg-light text-primary">{{ count($points) }} Total Data</span>
-        </div>
-        <div class="card-body bg-light">
-            <div class="table-responsive">
-                <table class="table table-hover">
+    <div class="page-table">
+
+        {{-- ===== TABEL POINT ===== --}}
+        <div class="table-card">
+            <div class="table-card-header">
+                <h4><i class="fa-solid fa-location-dot me-2"></i> Inventarisasi Titik Lokasi</h4>
+                <span class="table-badge">{{ count($points) }} Data</span>
+            </div>
+            <div style="overflow-x:auto;">
+                <table class="tbl" id="tabeldata">
                     <thead>
                         <tr>
                             <th class="text-center">No</th>
-                            <th>Detail Lokasi</th>
+                            <th>Nama Lokasi</th>
                             <th>Koordinat</th>
-                            <th class="text-center">Visual</th>
+                            <th>Foto</th>
                         </tr>
                     </thead>
                     <tbody>
-                        @php $no = 1; @endphp
-                        @foreach($points as $p)
-                        <tr>
-                            <td class="text-center fw-bold text-muted">{{ $no++ }}</td>
-                            <td>
-                                <div class="fw-bold text-dark">{{ $p->name }}</div>
-                                <small class="text-muted">{{ Str::limit($p->description, 50) }}</small>
-                            </td>
-                            <td>
-                                <div class="d-flex flex-column gap-1">
-                                    <span class="badge badge-lat"><i class="fas fa-arrows-alt-v me-1"></i> {{ $p->latitude }}</span>
-                                    <span class="badge badge-long"><i class="fas fa-arrows-alt-h me-1"></i> {{ $p->longitude }}</span>
-                                </div>
-                            </td>
-                            <td class="text-center">
-                                @if($p->image)
-                                    <img src="{{ asset('storage/images/' . $p->image) }}"
-                                         alt="{{ $p->name }}"
-                                         width="80"
-                                         class="img-thumbnail">
-                                @else
-                                    <i class="fas fa-image text-light fa-3x"></i>
-                                @endif
-                            </td>
-                        </tr>
-                        @endforeach
+                        @forelse ($points as $index => $point)
+                            <tr>
+                                <td class="no">{{ $index + 1 }}</td>
+                                <td>
+                                    <div class="loc-name">{{ $point->name }}</div>
+                                    <div class="loc-desc">{{ $point->description ?? '-' }}</div>
+                                </td>
+                                <td>
+                                    <span class="coord-badge coord-lat">
+                                        <i class="fa-solid fa-location-dot" style="font-size:.65rem;"></i>
+                                        {{ number_format($point->latitude, 6) }}
+                                    </span><br>
+                                    <span class="coord-badge coord-long">
+                                        <i class="fa-solid fa-compass" style="font-size:.65rem;"></i>
+                                        {{ number_format($point->longitude, 6) }}
+                                    </span>
+                                </td>
+                                <td>
+                                    @if ($point->image)
+                                        <img src="{{ asset('storage/images/' . $point->image) }}" class="loc-img"
+                                            alt="{{ $point->name }}">
+                                    @else
+                                        <div class="no-img">
+                                            <i class="fa-solid fa-image"></i>
+                                        </div>
+                                    @endif
+                                </td>
+                            </tr>
+                        @empty
+                            <tr class="empty-row">
+                                <td colspan="4">Belum ada data titik lokasi.</td>
+                            </tr>
+                        @endforelse
                     </tbody>
                 </table>
             </div>
         </div>
+
+        {{-- ===== TABEL POLYLINE ===== --}}
+        <div class="table-card">
+            <div class="table-card-header">
+                <h4><i class="fa-solid fa-draw-polygon me-2"></i> Inventarisasi Polyline</h4>
+                <span class="table-badge">{{ count($polylines) }} Data</span>
+            </div>
+            <div style="overflow-x:auto;">
+                <table class="tbl" id="tabelpolyline">
+                    <thead>
+                        <tr>
+                            <th class="text-center">No</th>
+                            <th>Nama</th>
+                            <th>Deskripsi</th>
+                            <th>Jumlah Titik</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse ($polylines as $index => $polyline)
+                            <tr>
+                                <td class="no">{{ $index + 1 }}</td>
+                                <td>
+                                    <div class="loc-name">{{ $polyline->name }}</div>
+                                </td>
+                                <td>
+                                    <div class="loc-desc">{{ $polyline->description ?? '-' }}</div>
+                                </td>
+                                <td>
+                                    <span class="titik-badge">
+                                        <i class="fa-solid fa-circle-nodes" style="font-size:.65rem;"></i>
+                                        {{ $polyline->jumlah_titik }} titik
+                                    </span>
+                                </td>
+                            </tr>
+                        @empty
+                            <tr class="empty-row">
+                                <td colspan="4">Belum ada data polyline.</td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        {{-- ===== TABEL POLYGON ===== --}}
+        <div class="table-card">
+            <div class="table-card-header">
+                <h4><i class="fa-solid fa-vector-square me-2"></i> Inventarisasi Polygon</h4>
+                <span class="table-badge">{{ count($polygons) }} Data</span>
+            </div>
+            <div style="overflow-x:auto;">
+                <table class="tbl" id="tabelpolygon">
+                    <thead>
+                        <tr>
+                            <th class="text-center">No</th>
+                            <th>Nama</th>
+                            <th>Deskripsi</th>
+                            <th>Jumlah Titik</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse ($polygons as $index => $polygon)
+                            <tr>
+                                <td class="no">{{ $index + 1 }}</td>
+                                <td>
+                                    <div class="loc-name">{{ $polygon->name }}</div>
+                                </td>
+                                <td>
+                                    <div class="loc-desc">{{ $polygon->description ?? '-' }}</div>
+                                </td>
+                                <td>
+                                    <span class="titik-badge">
+                                        <i class="fa-solid fa-circle-nodes" style="font-size:.65rem;"></i>
+                                        {{ $polygon->jumlah_titik }} titik
+                                    </span>
+                                </td>
+                            </tr>
+                        @empty
+                            <tr class="empty-row">
+                                <td colspan="4">Belum ada data polygon.</td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
     </div>
-</div>
 @endsection
+
+@push('scripts')
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <script src="https://cdn.datatables.net/2.3.8/js/dataTables.min.js"></script>
+
+    <script>
+        $(document).ready(function() {
+            const dtConfig = {
+                language: {
+                    search: "Cari:",
+                    lengthMenu: "Tampilkan _MENU_ data",
+                    info: "Menampilkan _START_ - _END_ dari _TOTAL_ data",
+                    infoEmpty: "Tidak ada data",
+                    zeroRecords: "Data tidak ditemukan",
+                    paginate: {
+                        first: "Pertama",
+                        last: "Terakhir",
+                        next: "Berikut",
+                        previous: "Sebelum"
+                    }
+                },
+                pageLength: 10
+            };
+
+            $('#tabeldata').DataTable({
+                ...dtConfig,
+                columnDefs: [{
+                    orderable: false,
+                    targets: [3]
+                }]
+            });
+
+            $('#tabelpolyline').DataTable({
+                ...dtConfig,
+                columnDefs: [{
+                    orderable: false,
+                    targets: [3]
+                }]
+            });
+
+            $('#tabelpolygon').DataTable({
+                ...dtConfig,
+                columnDefs: [{
+                    orderable: false,
+                    targets: [3]
+                }]
+            });
+        });
+    </script>
+@endpush

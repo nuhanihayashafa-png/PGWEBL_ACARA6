@@ -2,132 +2,157 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\pointsModel;
+use App\Models\PointsModel;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB; // FIX: tambah import DB untuk ST_AsText
 
 class PointsController extends Controller
 {
-    public function __construct()
+    protected PointsModel $points;
+
+    public function __construct(PointsModel $points)
     {
-        $this->points = new pointsModel();
-    }
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
-    {
-        //
+        $this->points = $points;
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     */
+    // ════════════════════════════════════════════════════
+    // Simpan data baru
+    // ════════════════════════════════════════════════════
     public function store(Request $request)
     {
+        $request->validate([
+            'geometry_point' => 'required',
+            'name'           => 'required|string|max:255',
+            'description'    => 'nullable|string',
+            'image'          => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+        ]);
 
-    //Validasi input
-    $request->validate(
-            [
-                'geometry_point' => 'required',
-                'name' => 'required|string|max:255',
-                'description' => 'required|string',
-                'image' => 'nullable|image|mimes:jpeg,png,jng|max:2028',
-            ],
-            [
-                'geometry_point.required' => 'Field geometry point harus diisi.',
-                'name.required' => 'Field name harus diisi.',
-                'name.string' => 'Field name harus berupa string.',
-                'name.max' => 'Field name tidak boleh lebih dari 255 karakter.',
-                'description.string' => 'Field description harus berupa string.',
-                'image.image' => 'Field  harus berupa gambar.',
-                'image.mimes' => 'Field gambar harus berformat jpeg, png, jpg.',
-                'image.max' => 'Ukuran field gambar tidak boleh lebih dari 2MB.',
-            ]
-        );
-
-        #Create directory for images if it doesn't exist
         if (!is_dir('storage/images')) {
-            mkdir('./storage/images', 0777);
-            }
+            mkdir('./storage/images', 0777, true);
+        }
 
-        #Get the uploaded image
+        $image_old = null;
         if ($request->hasFile('image')) {
-            $image = $request->file('image');
-            $name_image = time() . "_point." . strtolower($image->getClientOriginalExtension());
-            $image->move('storage/images', $name_image);
-            } else {
-                $name_image = null;
-                }
+            $image     = $request->file('image');
+            $image_old = time() . '_point.' . strtolower($image->getClientOriginalExtension());
+            $image->move('storage/images', $image_old);
+        }
 
         $data = [
-            'geom' => $request->geometry_point,
-            'name' => $request->name,
+            'geom'        => $request->geometry_point,
+            'name'        => $request->name,
             'description' => $request->description,
-            'image' => $name_image,
+            'image'       => $image_old,
         ];
 
-
-
-        // simpan data ke database
         if ($this->points->create($data)) {
-    return redirect()->route('map')->with('success', 'Data point berhasil disimpan.');
-}
+            return redirect()->route('map')->with('success', 'Data titik berhasil disimpan.');
+        }
 
-        //Kembali ke halaman peta
-        return redirect()->route('map')->with('error', 'Gagal menyimpan data point.');
+        return redirect()->route('map')->with('error', 'Gagal menyimpan data titik.');
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
-    {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
+    // ════════════════════════════════════════════════════
+    // FIX: Halaman edit tersendiri (map-edit-point.blade.php)
+    // Mengembalikan geom dalam format WKT agar JS bisa parse koordinatnya
+    // ════════════════════════════════════════════════════
     public function edit(string $id)
     {
-        //
-    }
+        $point = $this->points
+            ->select(
+                'id', 'name', 'description', 'image',
+                DB::raw('ST_AsText(geom) as geom') // WKT: POINT(lng lat)
+            )
+            ->find($id);
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
-    {
-        //
-    }
-
-    // Remove the specified resource from storage.
-    public function destroy(string $id)
-{
-    // Ambil data dulu untuk cek file gambar
-    $point = $this->points->find($id);
-
-    // Hapus file gambar jika ada
-    if ($point && $point->image) {
-        $imagePath = public_path('storage/images/' . $point->image);
-        if (file_exists($imagePath)) {
-            unlink($imagePath);
+        if (!$point) {
+            return redirect()->route('map')->with('error', 'Data titik tidak ditemukan.');
         }
+
+        return view('map-edit-point', compact('point'));
     }
 
-    // Hapus data dari database
-    if ($this->points->destroy($id)) {
-        return redirect()->route('map')->with('success', 'Data point berhasil dihapus.');
+    // ════════════════════════════════════════════════════
+    // Kembalikan satu titik sebagai JSON
+    // FIX: pakai ST_AsText agar tidak mengembalikan hex WKB mentah
+    // ════════════════════════════════════════════════════
+    public function show($id)
+    {
+        $point = $this->points
+            ->select(
+                'id', 'name', 'description', 'image',
+                DB::raw('ST_AsText(geom) as geom')
+            )
+            ->find($id);
+
+        return response()->json($point);
     }
 
-    return redirect()->route('map')->with('error', 'Gagal menghapus data point.');
-}
+    // ════════════════════════════════════════════════════
+    // Perbarui data titik
+    // ════════════════════════════════════════════════════
+    public function update(Request $request, $id)
+    {
+        $request->validate([
+            'geometry_point' => 'required',
+            'name'           => 'required|string|max:255',
+            'description'    => 'nullable|string',
+            'image'          => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+        ]);
+
+        $existingPoint = $this->points->find($id);
+
+        if (!$existingPoint) {
+            return redirect()->route('map')->with('error', 'Data titik tidak ditemukan.');
+        }
+
+        $image_old = $existingPoint->image;
+
+        if ($request->hasFile('image')) {
+            if ($existingPoint->image) {
+                $oldPath = public_path('storage/images/' . $existingPoint->image);
+                if (file_exists($oldPath)) {
+                    unlink($oldPath);
+                }
+            }
+
+            $image     = $request->file('image');
+            $image_old = time() . '_point.' . strtolower($image->getClientOriginalExtension());
+            $image->move('storage/images', $image_old);
+        }
+
+        $data = [
+            'geom'        => $request->geometry_point,
+            'name'        => $request->name,
+            'description' => $request->description,
+            'image'       => $image_old,
+        ];
+
+        if ($existingPoint->update($data)) {
+            return redirect()->route('map')->with('success', 'Data titik berhasil diperbarui.');
+        }
+
+        return redirect()->route('map')->with('error', 'Gagal memperbarui data titik.');
+    }
+
+    // ════════════════════════════════════════════════════
+    // Hapus data titik
+    // ════════════════════════════════════════════════════
+    public function destroy(string $id)
+    {
+        $point = $this->points->find($id);
+
+        if ($point && $point->image) {
+            $imagePath = public_path('storage/images/' . $point->image);
+            if (file_exists($imagePath)) {
+                unlink($imagePath);
+            }
+        }
+
+        if ($this->points->destroy($id)) {
+            return redirect()->route('map')->with('success', 'Data titik berhasil dihapus.');
+        }
+
+        return redirect()->route('map')->with('error', 'Gagal menghapus data titik.');
+    }
 }
