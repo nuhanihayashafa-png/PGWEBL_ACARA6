@@ -39,13 +39,15 @@ class PageController extends Controller
         )->get();
 
         $polylines = (new PolylinesModel)->select(
-            'id', 'name', 'description',
-            DB::raw('ST_NPoints(geom::geometry) as jumlah_titik')
+            'id', 'name', 'description', 'image',
+            DB::raw('ST_NPoints(geom::geometry) as jumlah_titik'),
+            DB::raw('ST_Length(geom::geography) as panjang_meter')
         )->get();
 
         $polygons = (new PolygonsModel)->select(
-            'id', 'name', 'description',
-            DB::raw('ST_NPoints(geom::geometry) as jumlah_titik')
+            'id', 'name', 'description', 'image',
+            DB::raw('ST_NPoints(geom::geometry) as jumlah_titik'),
+            DB::raw('ST_Area(geom::geography) / 10000 as area_hektar')
         )->get();
 
         return view('table', [
